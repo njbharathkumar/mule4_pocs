@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2a9a3a52-c2b4-4937-81bb-36de43ebf13b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="transformerdemoFlow" doc:id="da179add-639a-4dc9-999f-33f767926aae" >
+		<http:listener doc:name="Listener" doc:id="10f9d602-5c9f-4ee9-b675-b3dadb40bd09" config-ref="HTTP_Listener_config" path="/transform"/>
+		<ee:transform doc:name="Transform Message" doc:id="430cebf7-97c2-4309-a48e-88cfda4ccd97" >
+			<ee:message >
+				<ee:set-payload resource="product.dwl" />
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="pid.dwl" variableName="pid" />
+				<ee:set-variable resource="brand.dwl" variableName="brand" />
+			</ee:variables>
+		</ee:transform>
+	</flow>
+</mule>

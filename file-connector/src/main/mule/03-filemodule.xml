@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="cabd9e1f-24c4-4b3b-a3a9-34588ff2475b" >
+		<file:connection workingDir="C:\Users\BharathJ\Desktop\MuleSoft\cognixia\file" />
+	</file:config>
+	<flow name="03-filemoduleFlow" doc:id="31b45393-a6a5-47be-b320-406d48bc8526" >
+		<file:listener doc:name="On New or Updated File" doc:id="946eda6a-6a8f-4353-b873-04c15e08dae5" config-ref="File_Config" directory="input" renameTo="#[attributes.fileName ++ '.backup']" watermarkMode="CREATED_TIMESTAMP" moveToDirectory="output">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="e05be279-9b6b-419b-a073-810466c17436" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="2934425d-db97-4e3e-b842-3a97ff0e1e7a" >
+			<logger level="INFO" doc:name="Logger" doc:id="7a56204a-865e-4515-b354-4cab65a09f70" message="#[payload]" />
+		</foreach>
+	</flow>
+</mule>

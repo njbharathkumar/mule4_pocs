@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="da8df54d-19c0-4364-83eb-9cc8a87e802e" basePath="/rest" >
+		<http:request-connection host="localhost" port="7070" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="73b0b270-0ff5-41b9-b5c8-9f9eed97e8ad" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="c82c48eb-8cf8-4a4d-8725-341c925d6ea5" basePath="/rest" >
+		<http:request-connection host="localhost" port="7070" />
+	</http:request-config>
+	
+	
+	<flow name="mainFlow" doc:id="b2880b26-0832-4b69-b710-85e97c3ba38f" >
+		<http:listener doc:name="Listener" doc:id="5da9b5ed-97c1-4add-9487-3d708027aa9a" config-ref="HTTP_Listener_config" path="/products"/>
+		<choice doc:name="Choice" doc:id="f3533f00-7b75-4583-9d6d-1e63d8a3bea6" >
+			<when expression="#[attributes.queryParams.productname == null and attributes.method == 'GET']">
+				<flow-ref doc:name="getall" doc:id="d43902d2-25e7-4973-8413-96bb338f207d" name="getall"/>
+			</when>
+			<when expression="#[attributes.method == 'POST']">
+				<flow-ref doc:name="post" doc:id="cddf785d-b7b5-4f42-87ca-d75e0a68a7d2" name="post"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getbyName" doc:id="f1c18aad-23ed-437e-aca6-0430f5ae325c" name="getbyName"/>
+			</otherwise>
+		</choice>
+	</flow>
+	
+	<flow name="getall" doc:id="d8c79f4b-10e8-41c0-83bc-b904331b5bf0" >
+		<http:request method="GET" doc:name="Request" doc:id="60c7b569-9d17-49db-9f54-3a5b70377644" config-ref="HTTP_Request_configuration1" path="products"/>
+	</flow>
+	<flow name="getbyName" doc:id="7add57b2-351f-4d2b-852f-1d99e8b7c2e7" >
+		<http:request method="GET" doc:name="Request" doc:id="cade7d21-47c3-42d9-8860-a66ae63c4565" config-ref="HTTP_Request_configuration" path="/products/{pname}">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	pname : attributes.queryParams.productname
+}]]]></http:uri-params>
+		</http:request>
+	</flow>
+	<flow name="post" doc:id="7a87eaff-3aec-4099-a066-24094805fdcc" >
+		<http:request method="POST" doc:name="post" doc:id="3cd25c3e-e76d-4ee1-8337-c68930a7712e" config-ref="HTTP_Request_configuration" path="/products"/>
+	</flow>
+	
+	
+	
+</mule>

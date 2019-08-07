@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a0379190-1085-43c6-8542-888fa6651fa5" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="errorhFlow" doc:id="021e3848-cf6d-4b5e-9ec8-ad05482087d0" >
+		<http:listener doc:name="Listener" doc:id="4b49c699-9338-4d7b-9a92-dd39c38751dc" config-ref="HTTP_Listener_config" path="/error"/>
+		<try doc:name="Try" doc:id="1dd69c2b-0c13-478a-bfdd-352224ceed55" >
+			<validation:is-null doc:name="Is null" doc:id="878f2b1a-4613-4edc-9dbc-ccedeb18ea97" value="#[payload]" message="validation error"/>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="67c63c98-77be-4eee-bfb0-1346467c8d23" >
+					<set-payload value='"Error in try scope"' doc:name="Error in try scope" doc:id="602435c9-0d33-475e-aec1-8af19731ff8d" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<set-payload value='"Success flow"' doc:name='Success flow' doc:id="0e1e7a39-4eb2-4e43-b0e6-d5fb00df43be" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cacd1b52-5d06-4d8d-8a67-0b0438c41154" >
+				<set-payload value='in error handler' doc:name='In error handler' doc:id="2d21e313-7193-4426-a080-bae2dfb1449c" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

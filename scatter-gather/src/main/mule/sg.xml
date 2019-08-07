@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="97e00507-56ef-4f63-904d-4cd314402119" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sgFlow" doc:id="fdb32baf-621e-49ca-843c-4ba4667ec08c" >
+		<http:listener doc:name="Listener" doc:id="ddffbc18-37fc-422f-bbdd-66965be93616" config-ref="HTTP_Listener_config" path="/sg"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="42fcbac6-912b-4859-be3f-d6b1287c4700" >
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="ad1beff5-a1a2-485a-be4f-e2752ecccf57" name="apple"/>
+			</route>
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="2490c094-ed99-4476-a709-1739e5ca8a0e" name="mango"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="c145c659-2a70-44d7-8f3c-f645e58931d2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4259e962-88cc-4a98-bddb-e55adb6a5b84" message="#[payload]"/>
+	</flow>
+	<flow name="apple" doc:id="29bf6437-109f-4660-a53d-7ff8a2c0061d" >
+		<set-payload value='#["apple"]' doc:name="Set Payload" doc:id="1ec37679-04e4-4026-8953-94fbc761157f"/>
+	</flow>
+	<flow name="mango" doc:id="e109486b-2469-4514-bd5a-5c911881780b" >
+		<set-payload value='#["mango"]' doc:name="Set Payload" doc:id="5bed052d-55b1-4e02-bea1-95ca53f029c0"/>
+	</flow>
+</mule>

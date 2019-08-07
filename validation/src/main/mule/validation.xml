@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a2946d9a-0873-4815-8c1e-bf8d2f857045" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="a967c1a1-7fb5-408a-9684-fc4b65c9b4ea" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<flow name="validationFlow1" doc:id="a3c29739-fc16-4837-8519-694bb327d9f1" >
+		<http:listener doc:name="Listener" doc:id="e01c874b-98ba-4257-91f9-28963c7b5f3a" config-ref="HTTP_Listener_config1" path="/check2">
+			<http:error-response statusCode="#[vars.errorCode default 500]" >
+				<http:body ><![CDATA[#[output text/plain ---
+payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<ee:transform doc:name="Transform Message" doc:id="47c5ad43-53be-4e8f-b80f-8f0b15a14a6f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<validation:all doc:name="All" doc:id="fbf21d39-7a39-4ccd-8cf9-73ab7e39a8ca" >
+			<validation:is-not-blank-string doc:name="name" doc:id="db706868-0603-4c2e-b022-44157d1c3ebd" value="#[payload.name]" message="Name can't be null"/>
+			<validation:is-not-blank-string doc:name="email" doc:id="6f1405eb-1655-4373-ba2a-51f040d3eec2" value="#[payload.email]" message="Email can't be null"/>
+			<validation:matches-regex doc:name="Matches regex" doc:id="2c6954a4-93e9-4b66-ba05-4523a101ec7b" value="#[payload.date]" regex="^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$" message="#['Date format is incorrect']" />
+		</validation:all>
+		<logger level="INFO" doc:name="Logger" doc:id="9e0d0370-4f37-4f0e-ab61-6ee4e80248f3" message="#[payload]"/>
+	</flow>
+	<flow name="validationFlow" doc:id="16196d08-b96b-466f-bc1a-e58bc8979e20" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="76c1771e-3dd4-4967-acec-515b94d06e0b" config-ref="HTTP_Listener_config" path="/check"/>
+		<ee:transform doc:name="Transform Message" doc:id="eb6f5a66-989c-41e7-b96b-ba3319434e5b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="vemail" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.email]]></ee:set-variable>
+				<ee:set-variable variableName="vnum" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.number]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<validation:all doc:name="All" doc:id="fe742093-0d41-4eee-8212-a36cd5af2f58" >
+			<validation:is-email doc:name="Is email" doc:id="fbf49db6-1f8e-410c-b46e-fd78713c92a6" email="#[vars.vemail]" message="#['Invalid email']" />
+			<validation:is-number doc:name="Is number" doc:id="643302a6-87c0-44db-8467-c0d63618830e" value="#[vars.vnum]" maxValue="15" numberType="INTEGER" message="#['number is not valid']"/>
+		</validation:all>
+		<logger level="INFO" doc:name="Logger" doc:id="29be0e77-1b4c-4695-af2d-74504beacac3" message="#[payload]"/>
+	</flow>
+</mule>

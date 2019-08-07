@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0e8d84b5-a262-4888-805b-1af30f47c3a8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="9b226628-2db0-44dd-86ee-f1d1df23f58f" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	
+	<flow name="mainflow" doc:id="0f95e8b9-728c-4bb5-a5af-c2eece7767fb" >
+		<http:listener doc:name="Listener" doc:id="83b1b32f-eb4b-469a-a745-a99e7233a289" config-ref="HTTP_Listener_config" path="/request"/>
+		<set-payload value="MuleSoft" doc:name="MuleSoft" doc:id="bae61330-4f23-414d-9d9c-1e83e35f1517" />
+		<set-variable value="Bharath" doc:name="Bharath" doc:id="33bc4680-a743-4d3f-8716-1f3e3e921e01" variableName="name"/>
+		<http:request method="GET" doc:name="GET" doc:id="659b57d1-8ee6-436b-a4b9-f21c9ccb5b10" path="/get" config-ref="HTTP_Request_configuration" responseTimeout="300000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9429ee28-9636-4157-a537-863de46344a1" message="#[payload]"/>
+	</flow>
+	<flow name="flow2" doc:id="866c9c51-ba32-4233-b768-8d8139da094a" >
+		<http:listener doc:name="GET" doc:id="57907848-e5bf-4b9a-b6f6-293bd2cea52a" config-ref="HTTP_Listener_config" path="/get"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4b8a32c1-cb99-4aae-af49-a9cd2eceab4c" message="#[payload]"/>
+		<set-payload value="Oracle" doc:name="Oracle" doc:id="05b1b9c6-aa3a-4cb2-ab6a-7b68eb8adcc6" />
+		<logger level="INFO" doc:name="Logger" doc:id="ef68121c-e9fd-4459-b485-6cc7c270ea99" message="#[payload]"/>
+	</flow>
+</mule>

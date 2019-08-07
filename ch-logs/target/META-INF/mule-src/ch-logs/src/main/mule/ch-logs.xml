@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d85e3e55-ec98-489e-880c-d545b585599c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a8007280-4c65-4571-919a-eb554a34850a" basePath="/accounts">
+		<http:request-connection host="anypoint.mulesoft.com" protocol="HTTPS"/>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration_deploymentId" doc:name="HTTP Request configuration" doc:id="c3a848e6-f238-4405-880f-b340d5431258" basePath="/cloudhub/api/v2/applications" >
+		<http:request-connection protocol="HTTPS" host="anypoint.mulesoft.com" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration_get_logs" doc:name="HTTP Request configuration" doc:id="0baa489d-0d02-4122-bbbf-d3181be8f048" basePath="/cloudhub/api/v2/applications/">
+		<http:request-connection protocol="HTTPS" host="anypoint.mulesoft.com" />
+	</http:request-config>
+	<flow name="main-flow" doc:id="645e131d-6fb1-4808-aada-d2591bf5cbe5" >
+		<http:listener doc:name="Listener" doc:id="777c8a38-9472-4411-ae3e-576cb719c796" config-ref="HTTP_Listener_config" path="/getlogs"/>
+		<flow-ref doc:name="get-access-token" doc:id="d7183ee8-fb04-49a8-b82e-5ca5d6cb291e" name="access-token"/>
+		<ee:transform doc:name="Transform Message" doc:id="89e187af-b1e4-483b-9ac3-43242b93d894" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="access_token" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.access_token]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="print access token" doc:id="322a74e9-c087-4692-9e1e-3d7f0ff61a5b" message="#[vars.access_token]"/>
+		<flow-ref doc:name="get-deployment-id" doc:id="b191cfbe-9f64-4b77-be8d-7b42b25856de" name="get-deployment-id"/>
+		<logger level="INFO" doc:name="print depoyment id" doc:id="54039a8b-3b57-4dfc-8620-8c85b62eb0ee" message="#[payload]"/>
+		<set-variable value="#[payload.data[0].startTime]" doc:name="Start Time" doc:id="668b0a27-4fca-4d8c-9205-5957917d68c5" variableName="startTime"/>
+		<ee:transform doc:name="Transform Message" doc:id="69f8f4cc-9186-4517-97b4-f1689d1aef59" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+//((vars.startTime as LocalDateTime {format : "yyyy-MM-dd'T'HH:mm:ss.SSSZ"}) ++ |00:00:00| ++ |+00:00|) as Number
+
+//vars.startTime as LocalDateTime as String {format: "MM-dd-yyyy hh:mm:ss"}
+
+//vars.startTime as LocalDateTime as Number
+
+((vars.startTime as LocalDateTime) ++ |00:00:00| ++ |+00:00|) as Number
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="deployment_id" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data[0].deploymentId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform> 
+		<logger level="INFO" doc:name="startTime in epoch" doc:id="d3e9b316-48b0-4180-a391-b418f036479b" message="#[%dw 2.0
+output application/json
+---
+vars.startTime]"/>
+		<ee:transform doc:name="Transform Message" doc:id="f9d105dd-7180-4440-b645-9dc8069df476" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	deploymentId: vars.deployment_id,
+	startTime: ((vars.startTime as LocalDateTime) ++ |00:00:00| ++ |+00:00|) as Number,
+	limitMsgLen: 5000,
+	priority: "INFO"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="get-log-payload" doc:id="e44eca15-bc62-424c-8afd-88040bae218e" message="#[payload]"/>
+		<flow-ref doc:name="get-logs" doc:id="ac3b8ead-bd37-4228-8c08-b37c2bb8979b" name="get-logs" targetValue="#[payload]"/>
+	</flow>
+	<flow name="get-logs" doc:id="6d88e625-7c3b-45ad-9ab2-c423d6fce575">
+		<set-variable value="helloworldlog" doc:name="app_name" doc:id="901ad037-cf11-4830-aeb0-52b698eb39a5" variableName="app_name" />
+		<http:request method="POST" doc:name="Request" doc:id="3e944e1a-b8ad-44ce-9375-0bda47109720" config-ref="HTTP_Request_configuration_get_logs" path='#[vars.app_name ++ "/logs"]' sendBodyMode="ALWAYS" responseTimeout="50000">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "bearer " ++ vars.access_token,
+	"Cache-Control" : "no-cache",
+	"X-ANYPNT-ENV-ID" : "01bfb944-7879-4bfe-b3da-e06cedcb9c5b",
+	"X-ANYPNT-ORG-ID" : "3378466d-df4c-4df8-b51f-23ced6ad8ba2",
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="a5db508c-527d-4c23-85b3-3c728c659e66" message="#[payload]"/>
+	</flow>
+	<flow name="get-deployment-id" doc:id="7d48f294-582f-434a-93f4-7ea6a720fe97" >
+		<set-variable value="helloworldlog" doc:name="application name" doc:id="90ef0d93-7ab0-4aa7-9bbf-15be160bfe0f" variableName="app_name"/>
+		<http:request method="GET" doc:name="Request" doc:id="fad80203-014d-4811-93a2-125adc281fa2" config-ref="HTTP_Request_configuration_deploymentId" path='#["/" ++ vars.app_name ++ "/deployments?orderByDate=DESC"]' sendBodyMode="ALWAYS" responseTimeout="50000">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "bearer " ++ vars.access_token,
+	"Cache-Control" : "no-cache",
+	"X-ANYPNT-ENV-ID" : "01bfb944-7879-4bfe-b3da-e06cedcb9c5b",
+	"X-ANYPNT-ORG-ID" : "3378466d-df4c-4df8-b51f-23ced6ad8ba2",
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="a2a9b7b7-2c96-40a9-92a3-5a7e34cc7ac5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="67d988d8-3749-446b-a273-3b99ac5ec3c9" message="#[payload]"/>
+	</flow>
+	<flow name="access-token" doc:id="acea76cd-86ea-4cc1-bac6-34fc3d6e890c" >
+		<ee:transform doc:name="Transform Message" doc:id="1884fb30-a6cc-44fc-b82e-ef25d212607b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"username":"vamsi88",
+	"password":"Hello@123"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="b28478f0-094a-4852-b5f4-09ebdceeebb3" config-ref="HTTP_Request_configuration" path="/login" sendBodyMode="ALWAYS" responseTimeout="50000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e3ce39f3-91fa-47a6-849e-f95555345d49" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d2a5a889-7987-42cf-b2c5-bcbf989dd3b2" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="33899c39-7dbf-4d82-affe-1b9534c54fb0" file="http.yaml" />
+	<flow name="cloudhubFlow" doc:id="49a31f2c-bad1-4c07-b68e-82a1568fc36b" tracking:enable-default-events="true">
+		<http:listener doc:name="Listener" doc:id="5ebb0f47-7de3-4d9a-a845-3acc2a1ce383" config-ref="HTTP_Listener_config" path="/cloud"/>
+		<set-payload value="Hello" doc:name="Set Payload" doc:id="76ae9b10-9fcb-42e9-a7ed-453416caa009" />
+		<flow-ref doc:name="Flow Reference" doc:id="5fa13c5f-51ba-4c95-b846-03228cb0a543" name="businessevent"/>
+		<logger level="INFO" doc:name="Logger" doc:id="fdcf657c-1eff-4196-b5c3-cb63ae5bb5e6" message="#[payload]"/>
+	</flow>
+	<flow name="businessevent" doc:id="dd3adf61-af63-45a5-acf8-642546487870" >
+		<tracking:custom-event doc:name="Custom Business Event" doc:id="be5e4421-bb4a-4d74-98ad-1bc4ad2f9123" event-name="bevent">
+			<tracking:meta-data key="first" value="#[payload]" />
+		</tracking:custom-event>
+		<logger level="INFO" doc:name="Logger" doc:id="d72e9c42-ccf0-4c6c-a727-5e9db24f8772" />
+	</flow>
+</mule>
