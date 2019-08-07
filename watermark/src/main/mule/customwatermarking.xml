@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<os:object-store name="myos" doc:name="Object store" doc:id="2fa02b9c-4180-4fce-8e58-b59214680da3" maxEntries="1000" />
+	<flow name="customwatermarkingFlow" doc:id="86bfe606-db50-4a26-a1b7-3313f9167e13" >
+		<scheduler doc:name="Scheduler" doc:id="ab8065d4-e9bd-4624-b897-7d26d3466ec6" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve" doc:id="277552fc-cf3a-4d70-abf0-62d52744a07d" key="lastproductid" target="lastproductid" objectStore="myos">
+			<os:default-value ><![CDATA[#[0]]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="Select" doc:id="5ff31fba-7619-479e-a25f-8cce98316a5f" config-ref="Database_Config">
+			<db:sql >select * from product where product_id = :lastproductid</db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	lastproductid: vars.lastproductid as String
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="4686de5c-fb8b-40a8-8c05-d15ff730fce9" >
+			<when expression="#[not isEmpty(payload)]">
+				<logger level="INFO" doc:name="Logger" doc:id="8069e39c-a5ef-4eb8-869a-5fd00e1a352d" />
+				<os:store doc:name="Store" doc:id="0e6f1971-68c3-455f-bf1e-281193cee9d8" key="lastproductid" objectStore="myos">
+					<os:value ><![CDATA[#[max(payload.product_id)]]]></os:value>
+				</os:store>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="9d6caae4-c88d-4578-b616-b59dd3382ab8" message="#[payload]"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

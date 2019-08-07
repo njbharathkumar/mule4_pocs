@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="330759b9-3203-4939-8836-e4c3e2936dd9" >
+		<db:my-sql-connection host="127.0.0.1" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="b8764e5e-f2b2-4a9b-a488-b87ac2191f35" >
+		<file:connection workingDir="C:\Users\BharathJ\Desktop\MuleSoft\cognixia\file" />
+	</file:config>
+	<flow name="watermarkingFlow" doc:id="08f67491-a7c8-4c44-b933-182c24b352ed" initialState="stopped">
+		<db:listener table="product" doc:name="On Table Row" doc:id="600d20e6-4b55-49db-8d1b-a854a8328c62" config-ref="Database_Config" watermarkColumn="product_id" idColumn="product_id">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</db:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="693a987e-7fa2-4ae5-8180-0a787ba36e9f" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="3f6e9e4b-03d9-4139-a719-95401433e0cf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=false
+---
+[payload]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="18ba8760-dfd0-4888-87bb-69cadacb2319" config-ref="File_Config" path="output/product.csv" mode="APPEND"/>
+	</flow>
+</mule>
