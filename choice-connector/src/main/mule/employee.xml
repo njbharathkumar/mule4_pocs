@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="695408e0-bc3f-4c9f-aadc-64b516554d34">
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config> 
+	<flow name="employeeFlow" doc:id="e008d12e-8baf-4a0c-a53c-10f6afaae845" >
+		<http:listener doc:name="Listener" doc:id="5be5ef29-c103-4b95-8b58-e8a5b13ea5be" config-ref="HTTP_Listener_config" path="/emp"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5e2b0908-0006-4f15-b232-ac0d1c668e67" message="#[attributes.queryParams.id]"/>
+		<choice doc:name="Choice" doc:id="67711a73-3d75-4475-99e9-f65f1b6a5df8" >
+			<when expression="#[attributes.queryParams.id != '43']">
+				<set-payload value='[{
+	"id": "42",
+	"employee_name": "Olivia Liang",
+	"employee_salary": "234500",
+	"employee_age": "64",
+	"profile_image": ""
+},{
+	"id": "42",
+	"employee_name": "Olivia Liang",
+	"employee_salary": "234500",
+	"employee_age": "64",
+	"profile_image": ""
+}]' doc:name="Set Payload" doc:id="b9e26779-30c5-4351-8873-f6a487ff010d" mimeType="application/json"/>
+			</when>
+			<otherwise >
+				<set-payload value='[{
+	"id": "43",
+	"employee_name": "Bruno Nash",
+	"employee_salary": "163500",
+	"employee_age": "38",
+	"profile_image": ""
+},{
+	"id": "43",
+	"employee_name": "Bruno Nash",
+	"employee_salary": "163500",
+	"employee_age": "38",
+	"profile_image": ""
+}]' doc:name="Set Payload" doc:id="7f51388b-c604-4039-9900-cb00f8f493f5" mimeType="application/json"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
