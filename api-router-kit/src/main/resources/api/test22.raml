@@ -1,0 +1,56 @@
+#%RAML 1.0
+baseUri: ##https://anypoint.mulesoft.com/mocking/api/v1/links/298e8093-82d0-40c1-bc9b-06e5bee2c87f/ # 
+title: test22
+version: v1.0
+
+
+/test:
+  description: Test
+  get:
+    body:
+      application/json:
+
+    queryParameters:
+      name: string
+        
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              {
+                "message" : "Hello"
+              }
+           
+      400: 
+        body:
+          application/json:
+            example:
+              {
+                "code": 400,
+                "message": "Bad request"
+              }
+      401:
+        body:
+          application/json:
+            example:
+              {
+                "code": 401,
+                "message": "Unauthorized"
+              }
+      404: 
+        body:
+          application/json:
+            example:
+              {
+                "code": "RESOURCE_NOT_FOUND",
+                "message": "Error trying to find resource /create"
+              }
+      405: 
+        body:
+          application/json:
+            example:
+              {
+                "code": "METHOD_NOT_FOUND",
+                "message": "Error trying to find method get"
+              }
